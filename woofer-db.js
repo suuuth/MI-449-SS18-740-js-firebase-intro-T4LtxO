@@ -13,10 +13,7 @@ firebase.auth().signInAnonymously()
 
 // CREATE a new woof in Firebase
 function createWoofInDatabase (woof) {
-  firebase.database().ref('woofs').push({
-    "created_at": woof.created_at,
-    "text": woof.text
-  })
+  firebase.database().ref('woofs').push(woof)
 }
 
 // READ from Firebase when woofs are added, changed, or removed
@@ -25,21 +22,25 @@ function createWoofInDatabase (woof) {
 // sure to pass the right parameters (hint: these functions are
 // defined in woofer-ui.js).
 function readWoofsInDatabase () {
+
   var ref = firebase.database().ref('woofs')
-  .on('value', function (woofSnapshot) {
-    if (woofSnapshot.exists()) {
-      var keys = Object.keys(woofSnapshot.val())
-      console.log('Keys: ' + keys)
-      for (var i = 0; i < keys.length; i++) {
-        var thisWoof = Object.keys(woofSnapshot.val())[i]
-        firebase.database().ref('woofs/'+thisWoof+'')
-        .on('value', function (snapshot) {
-          var woofKey = snapshot.key
-          var woof = snapshot.val()
-          addWoofRow(woofKey, woof)
-        })
-      }
-    }
+  .on('child_added', function (snapshot) {
+    woofKey = snapshot.key
+    woof = snapshot.val()
+    addWoofRow(woofKey, woof)
+  })
+
+  var ref = firebase.database().ref('woofs')
+  .on('child_changed', function (snapshot) {
+    woofKey = snapshot.key
+    woof = snapshot.val()
+    updateWoofRow(woofKey, woof)
+  })
+
+  var ref = firebase.database().ref('woofs')
+  .on('child_removed', function (snapshot) {
+    woofKey = snapshot.key
+    deleteWoofRow(woofKey)
   })
 }
 
